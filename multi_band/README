@@ -1,0 +1,16 @@
+To compile, do
+
+chpl main.chpl --cpp-lines -Llibpng-1.6.38/.libs -lpng16 --fast
+
+To run, do
+
+./main -nl 4 --in_array=from_Sam_multi.bin --in_image=from_Sam_multi.png --outname=out_multi.png --window_size=10000 --dx=1
+
+/* Command line arguments. */
+config const in_array : string;               /* name of array to read in */
+config const in_image : string;                /* name of PNG file to read */
+config const outname : string;               /* name of PNG file to write at the end */
+config const window_size : real;                  /* the desired area of the neighborhood (in meters^2) */
+config const dx : real;                      /* the resolution of the raster image (in meters) */
+
+cp /glade/work/bachman/Jupyter_Notebooks/Coral_Reef_Alliance/spectral_diversity/from_Sam_multi.* ./
