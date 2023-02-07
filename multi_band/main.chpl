@@ -1,7 +1,9 @@
 use png;
 use distance_mask;
+use distance;
 use BlockDist;
 use Time;
+use IO_Module;
 use IO;
 use AutoMath;
 use LinearAlgebra;
@@ -12,30 +14,54 @@ config const in_image : string;                /* name of PNG file to read */
 config const outname : string;               /* name of PNG file to write at the end */
 config const window_size : real;                  /* the desired area of the neighborhood (in meters^2) */
 config const dx : real;                      /* the resolution of the raster image (in meters) */
+config const metric : string;                /* Choose which distance metric to use */
 
-proc convolve_and_calculate(Array: [] real, centerPoints : ?, Mask : [] bool, MaskDomain : ?, Output: [] real, Mask_Size : int,  t: stopwatch) : [] {
+var bs = 1;
+var be = 5;
 
-  //var centerPoints2 = [ (95,123), ];
+proc convolve_and_calculate(Array: [] real, centerPoints : ?, locL : ?, locC : ?, locR : ?, Output: [] real, Mask_Size : int, dist_type, t: stopwatch) : [] {
 
-  forall (i,j) in centerPoints {
-    for (k,l) in MaskDomain {
-      var dist : real = 0;
-      if Mask[k,l] {
-        //writeln( Array[..,i,j] );
-        //writeln( Array[..,i+k,j+l] );
-        var tmp : real = 0;
-        for m in 1..5 {
-          tmp += (Array[m,i+k,j+l]-Array[m,i,j])**2;
-        }
-        dist = sqrt(tmp);
-        //writeln(dist);
-        //writeln();
-      }
-      Output[i,j] += dist;
+  var first_point = centerPoints.first[1];
+  var last_point = centerPoints.last[1];
+
+  forall i in centerPoints[..,first_point] {
+
+    var tmpLL : real = 0;
+    var tmpLC : real = 0;
+    var tmpLR : real = 0;
+    var tmpCC : real = 0;
+    var tmpCR : real = 0;
+    var tmpRR : real = 0;
+
+    calc_distance(Array, locL, locL, tmpLL, bs, be, i, first_point, dist_type);
+    calc_distance(Array, locL, locC, tmpLC, bs, be, i, first_point, dist_type);
+    calc_distance(Array, locL, locR, tmpLR, bs, be, i, first_point, dist_type);
+    calc_distance(Array, locC, locC, tmpCC, bs, be, i, first_point, dist_type);
+    calc_distance(Array, locC, locR, tmpCR, bs, be, i, first_point, dist_type);
+    calc_distance(Array, locR, locR, tmpRR, bs, be, i, first_point, dist_type);
+
+    Output[i,first_point] = (tmpLL + tmpCC + tmpRR + 2*(tmpLC + tmpLR + tmpCR)) / (Mask_Size**2);
+    var prev = tmpCC + tmpRR + 2*tmpCR;
+
+    for j in (first_point+1)..last_point do {
+
+      tmpLL = 0;
+      tmpLC = 0;
+      tmpLR = 0;
+      tmpCR = 0;
+      tmpRR = 0;
+
+      calc_distance(Array, locL, locL, tmpLL, bs, be, i, j, dist_type);
+      calc_distance(Array, locL, locC, tmpLC, bs, be, i, j, dist_type);
+      calc_distance(Array, locL, locR, tmpLR, bs, be, i, j, dist_type);
+      calc_distance(Array, locC, locR, tmpCR, bs, be, i, j, dist_type);
+      calc_distance(Array, locR, locR, tmpRR, bs, be, i, j, dist_type);
+
+      var current = tmpRR + 2*(tmpLR + tmpCR);
+      Output[i,j] = (prev + current) / (Mask_Size**2);
+      prev = prev + current - tmpLL - 2*(tmpLC + tmpLR);
+
     }
-    Output[i,j] = Output[i,j] / Mask_Size;
-    //writeln(Output[i,j]);
-    //if (Output[i,j] > 250) { writeln(i : string, " ", j : string, " ", Output[i,j] : string); }
   }
 
   writeln("Elapsed time on ", here.name, ": ", t.elapsed(), " seconds for domain ", centerPoints);
@@ -61,6 +87,7 @@ proc main(args: [] string) {
   var x = Image.shape[0];
   var y = Image.shape[1];
   var Array : [1..5,1..x,1..y] real;
+
   // Read in array
   var f = open(in_array, iomode.r);
   var r = f.reader(kind=ionative);
@@ -76,7 +103,7 @@ proc main(args: [] string) {
   r.close();
 
   // Create distance mask
-  var (Mask, Mask_Size) = create_distance_mask(radius, dx, nx);
+  var (LeftMask, CenterMask, RightMask, Mask_Size) = create_distance_mask(radius, dx, nx);
 
   // Create Block distribution of interior of PNG
   const offset = nx; // maybe needs to be +1 to account for truncation?
@@ -96,15 +123,18 @@ proc main(args: [] string) {
     // of cross-locale calls to access these variables. This seems to double the amount of time it
     // takes to run through the coforall loop for all non-head locales!
 
+    const dist_type = metric;
+
     const loc_Mask_Size = Mask_Size;
 
     const locArrayDomain = Array.domain;
     const locArray : [locArrayDomain] Array.eltType = Array;
 
-    const locMaskDomain = Mask.domain;
-    const locMask : [locMaskDomain] Mask.eltType = Mask;
+    const locLeftMaskDomain = LeftMask.domain;
+    const locCenterMaskDomain = CenterMask.domain;
+    const locRightMaskDomain = RightMask.domain;
 
-    convolve_and_calculate(locArray, D.localSubdomain(), locMask, locMaskDomain, OutputArray, loc_Mask_Size, t);
+    convolve_and_calculate(locArray, D.localSubdomain(), locLeftMaskDomain, locCenterMaskDomain, locRightMaskDomain, OutputArray, loc_Mask_Size, dist_type, t);
   }
 
 
@@ -117,5 +147,9 @@ proc main(args: [] string) {
   write_array_to_PNG(outname, GatheredArray, rgb_ptr, t);
 
   writeln("Elapsed time to write PNG: ", t.elapsed(), " seconds.");
+
+  WriteOutput(GatheredArray, ImageSpace, offset);
+
+  writeln("Elapsed time to write NetCDF: ", t.elapsed(), " seconds.");
 }
 

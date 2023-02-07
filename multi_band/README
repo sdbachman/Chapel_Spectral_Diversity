@@ -1,10 +1,10 @@
 To compile, do
 
-chpl main.chpl --cpp-lines -Llibpng-1.6.38/.libs -lpng16 --fast
+chpl main.chpl --cpp-lines -Llibpng-1.6.38/.libsa -lpng16 -lnetcdf -L/glade/u/apps/ch/opt/netcdf/4.8.1/gnu/10.1.0/lib -I/glade/u/apps/ch/opt/netcdf/4.8.1/gnu/10.1.0/include --ldflags="-Wl,-rpath,/glade/u/apps/ch/opt/netcdf/4.8.1/gnu/10.1.0/lib" --fast
 
 To run, do
 
-./main -nl 4 --in_array=from_Sam_multi.bin --in_image=from_Sam_multi.png --outname=out_multi.png --window_size=10000 --dx=1
+./main -nl 10 --in_array=from_Sam_multi.bin --in_image=from_Sam_multi.png --outname=out_multi.png --window_size=10000 --dx=1 --metric=Euclidean
 
 /* Command line arguments. */
 config const in_array : string;               /* name of array to read in */
@@ -12,5 +12,25 @@ config const in_image : string;                /* name of PNG file to read */
 config const outname : string;               /* name of PNG file to write at the end */
 config const window_size : real;                  /* the desired area of the neighborhood (in meters^2) */
 config const dx : real;                      /* the resolution of the raster image (in meters) */
+config const metric : string;                /* Choose which distance metric to use */
 
 cp /glade/work/bachman/Jupyter_Notebooks/Coral_Reef_Alliance/spectral_diversity/from_Sam_multi.* ./
+
+
+
+
+NOTES:
+Worked:
+var ArrayTypeHelper : [1..5] real;
+type T = proc(_: ArrayTypeHelper.type, _: ArrayTypeHelper.type) : real
+var tmp2 : ArrayTypeHelper.type = Array[..,1,1];
+
+Did not work:
+** Can't use generic functions **
+type T = proc(_: [] real, _: [] real) : real
+
+** Illegal access since this is ArrayView **
+var dd = myFunc(Array[..,2,2], Array[..,1,1]);
+
+** Illegal cast **
+var tmp2 = Array[..,2,2] : ArrayTypeHelper.type;
