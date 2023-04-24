@@ -1,6 +1,5 @@
 use distance;
-//use distance_mask;
-use distance_mask2;
+use distance_mask;
 use IO_Module;
 use IO;
 use BlockDist;
@@ -69,10 +68,12 @@ proc convolve_and_calculate(Array: [] real(32), dive_site : [1..2] int(16), dswr
       //Output[i,l] = Output[i,l-1] + current - discard;
       discard = tmpLL + 2*(tmpLC + tmpLR);
 
+      /*
       if (Output[i,l] < 0) {
         writeln("Negative output detected.");
         exit();
       }
+      */
 
     }
   }
