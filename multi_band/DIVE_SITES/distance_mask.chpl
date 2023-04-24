@@ -1,4 +1,4 @@
-module distance_mask2 {
+module distance_mask {
 
 proc create_distance_mask(radius : real, dx : real, nx : int) {
 
