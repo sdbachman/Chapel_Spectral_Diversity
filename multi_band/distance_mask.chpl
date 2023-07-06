@@ -57,85 +57,14 @@ proc create_distance_mask(radius : real, dx : real, nx : int) {
     }
   }
 
+  // Make sure no points are in both the left and right masks
+  for (i,j) in D_right do {
+    if D_left.contains((i,j)) {
+      D_left -= (i,j);
+    }
+  }
+
   var mask_size = (+ reduce left_mask) + (+ reduce center_mask) + (+ reduce right_mask);
-
-/*
-  const D4 : domain(4, int) = {-nx..nx, -nx..nx, -nx..nx, -nx..nx};
-
-  var LL_D : sparse subdomain(D4);
-  var LC_D : sparse subdomain(D4);
-  var LR_D : sparse subdomain(D4);
-  var CC_D : sparse subdomain(D4);
-  var CR_D : sparse subdomain(D4);
-  var RR_D : sparse subdomain(D4);
-
-  var LL : [LL_D] bool;
-  var LC : [LC_D] bool;
-  var LR : [LR_D] bool;
-  var CC : [CC_D] bool;
-  var CR : [CR_D] bool;
-  var RR : [RR_D] bool;
-
-  // Set default value of sparse arrays to be true.
-  LL.IRV = true;
-  LC.IRV = true;
-  LR.IRV = true;
-  CC.IRV = true;
-  CR.IRV = true;
-  RR.IRV = true;
-
-  for (i,j) in D_left {
-    for (k,l) in D_left {
-      if !LL_D.contains((k,l,i,j)) {
-        LL_D += (i,j,k,l);
-      }
-    }
-  }
-
-  for (i,j) in D_left {
-    for (k,l) in D_center {
-        LC_D += (i,j,k,l);
-    }
-  }
-
-  for (i,j) in D_left {
-    for (k,l) in D_right {
-        LR_D += (i,j,k,l);
-    }
-  }
-
-  for (i,j) in D_center {
-    for (k,l) in D_center {
-      if !CC_D.contains((k,l,i,j)) {
-        CC_D += (i,j,k,l);
-      }
-    }
-  }
-
-  for (i,j) in D_center {
-    for (k,l) in D_right {
-      CR_D += (i,j,k,l);
-    }
-  }
-
-  for (i,j) in D_right {
-    for (k,l) in D_right {
-      if !RR_D.contains((k,l,i,j)) {
-        RR_D += (i,j,k,l);
-      }
-    }
-  }
-
-  writeln(LL_D.size);
-  writeln(LC_D.size);
-  writeln(LR_D.size);
-  writeln(CC_D.size);
-  writeln(CR_D.size);
-  writeln(RR_D.size);
-
-  return (LL, LC, LR, CC, CR, RR, mask_size);
-
-  */
 
   return (left_mask, center_mask, right_mask, mask_size);
 

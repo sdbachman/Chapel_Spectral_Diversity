@@ -1,35 +1,18 @@
 
 
-proc calc_distance(Array : [] real, MaskDomain1 : ?, MaskDomain2 : ?, inout Output_tmp : real, bs : int, be : int, i : int, j : int, dist_type : string) {
+proc calc_distance(Array : [] real(32), MaskDomain1 : ?, MaskDomain2 : ?, inout Output_tmp : real, bs : int, be : int, i : int, j : int) {
 
 for (k,l) in MaskDomain1 {
   for (m,n) in MaskDomain2 {
-  var dist : real = 0;
-
-  if (dist_type == "Euclidean") {
+    var dist : real = 0;
     var tmp : real = 0;
+
     for p in bs..be {
-      tmp += (Array[p,i+k,j+l]-Array[p,i+m,j+n])**2;
+      tmp += (Array[i+k,j+l,p]-Array[i+m,j+n,p])**2;
     }
     dist = sqrt(tmp);
+    Output_tmp += dist;
   }
-  else if (dist_type == "Manhattan") {
-    var tmp : real = 0;
-    for p in bs..be {
-      tmp += abs(Array[p,i+k,j+l]-Array[p,i+m,j+n]);
-    }
-    dist = tmp;
-  }
-  else if (dist_type == "Canberra") {
-    var tmp : real = 0;
-    for p in bs..be {
-      tmp += abs(Array[p,i+k,j+l]-Array[p,i+m,j+n]) / ( abs(Array[p,i+k,j+l]) + abs(Array[p,i+m,j+n]) ) ;
-    }
-    dist = tmp;
-  }
-
-  Output_tmp += dist;
-}
 }
 
 }
