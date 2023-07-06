@@ -1,0 +1,18 @@
+
+chpl main.chpl -lnetcdf -L/glade/u/apps/ch/opt/netcdf/4.8.1/gnu/10.1.0/lib -I/glade/u/apps/ch/opt/netcdf/4.8.1/gnu/10.1.0/include --ldflags="-Wl,-rpath,/glade/u/apps/ch/opt/netcdf/4.8.1/gnu/10.1.0/lib" --fast
+
+TOO EXPENSIVE
+./main -nl 12 --in_name=052686529220_01_P002_MULTOA --window_size=1273240 --dive_site_window_size=6366200 --dx=2
+
+THESE CAN WORK (~10k seconds each)
+./main -nl 12 --in_name=052686529220_01_P002_MULTOA --window_size=636620 --dive_site_window_size=1273240 --dx=2
+./main -nl 12 --in_name=052686529220_01_P002_MULTOA --window_size=1273240 --dive_site_window_size=318310 --dx=2
+
+./main -nl 12 --in_name=052686529220_01_P002_MULTOA --window_size=1273240 --dive_site_window_size=1273240 --dx=2
+
+/* Command line arguments. */
+config const in_name : string;
+config const window_size : real(32);
+config const dive_site_window_size : real(32);
+config const dx : real(32) = 5.0;
+

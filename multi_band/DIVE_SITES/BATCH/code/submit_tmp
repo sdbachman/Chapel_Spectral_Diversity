@@ -1,0 +1,21 @@
+#!/bin/bash
+
+### Job Name
+#PBS -N chapel_spectral
+
+### Project code
+##PBS -A NCGD0011
+#PBS -A P93300012
+#PBS -l walltime=12:00:00
+#PBS -q premium
+
+### Merge output and error files
+#PBS -j oe
+#PBS -k eod
+
+### Select 2 nodes with 36 CPUs each for a total of 72 MPI processes
+REPL1
+
+### Run the executable
+source ~/.chapel_batch
+REPL2
